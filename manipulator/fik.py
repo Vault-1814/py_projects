@@ -53,15 +53,18 @@ class Kinematics:
         a2 = self.a[1]
         a3 = 2 * self.a[1]
         r06 = h[:3, :3]
+
         o = h[:3, 3]
         oc = o - dot(d6 * r06, [0, 0, 1])
         xc, yc, zc = oc
         # position problem
         s = zc - self.d[0]
         r = sqrt(xc**2 + yc**2)
+        if xc < 0:
+            r *= -1
         d = (s**2 + r**2 - a2**2 - a3**2) / (2 * a2 * a3)
-        q[0, 0] = q[1, 0] = atan2(yc, xc)
-        q[2, 0] = q[3, 0] = pi + atan2(yc, xc)
+        q[0, 0] = q[2, 0] = atan2(yc, xc)
+        q[1, 0] = q[3, 0] = pi + atan2(yc, xc)
 
         q[0, 2] = q[1, 2] = atan2(sqrt(abs(1 - d**2)), d)
         q[2, 2] = q[3, 2] = atan2(-sqrt(abs(1 - d**2)), d)
@@ -74,7 +77,8 @@ class Kinematics:
         # orientation problem
         def solve_orientation(r36, i=0, select_solve=0):
             eps = numpy.finfo(numpy.float).eps
-            if abs(r36[0, 2]) > 10 * eps and r36[0, 2] != r36[1, 2]:
+            print(r36)
+            if abs(r36[0, 2]) > 10 * eps or abs(r36[1, 2]) > 10 * eps:
                 if select_solve == 0:
                     q[i, 4] = atan2(sqrt(abs(1 - r36[2, 2]**2)), r36[2, 2])
                     q[i, 3] = atan2(r36[1, 2], r36[0, 2])
@@ -85,28 +89,28 @@ class Kinematics:
                     q[i, 5] = atan2(-r36[2, 1], r36[2, 0])
             else:
                 print("!psi + phi!")
-                if r36[2, 2] > eps:
+                if r36[2, 2] > 0:
                     if select_solve == 0:
-                        q[i, 4] = -pi
+                        q[i, 4] = 0
                         # any
-                        q[i, 3] = 0
-                        q[i, 5] = pi
+                        q[i, 3] = atan2(r36[1, 0], r36[0, 0])
+                        q[i, 5] = 0
                     else:
                         q[i, 4] = 0
                         # any
-                        q[i, 5] = 0
-                        q[i, 3] = pi
+                        q[i, 3] = 0
+                        q[i, 5] = atan2(r36[1, 0], r36[0, 0])
                 else:
                     if select_solve == 0:
-                        q[i, 4] = 0
+                        q[i, 4] = pi
+                        # any
+                        q[i, 3] = atan2(r36[1, 0], r36[0, 0])
+                        q[i, 5] = 0
+                    else:
+                        q[i, 4] = pi
                         # any
                         q[i, 3] = 0
-                        q[i, 5] = pi
-                    else:
-                        q[i, 4] = -pi
-                        # any
-                        q[i, 5] = 0
-                        q[i, 3] = pi
+                        q[i, 5] = atan2(r36[1, 0], r36[0, 0])
 
         # finding orientation matrix for one of configurations
         # first tree angles
@@ -117,12 +121,12 @@ class Kinematics:
         r36 = dot(transpose(r03), r06)
         solve_orientation(r36, 0, select_solve=0)
     # for 1 (from matrix q)
-        h03 = self.forward(q[0], n=3)
+        h03 = self.forward(q[1], n=3)
         r03 = h03[:3, :3]
         r36 = dot(transpose(r03), r06)
         solve_orientation(r36, 1, select_solve=1)
     # for 2 (from matrix q)
-        h03 = self.forward(q[3], n=3)
+        h03 = self.forward(q[2], n=3)
         r03 = h03[:3, :3]
         r36 = dot(transpose(r03), r06)
         solve_orientation(r36, 2, select_solve=0)
