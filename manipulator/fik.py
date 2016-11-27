@@ -5,6 +5,7 @@
 from numpy import identity, dot, sign, transpose
 import numpy
 from math import pi, cos, sin, atan2, sqrt
+import math
 from ht import translation_matrix, rotation_matrix, concatenate_matrices
 
 
@@ -25,6 +26,12 @@ class Kinematics:
         self.alpha = alpha
         self.d = d
         self.theta = theta
+
+    def get_dh_d(self):
+        return self.d
+
+    def get_dh_theta(self):
+        return self.theta
 
     # forward kinematics
     def forward(self, q, n=6):
@@ -60,43 +67,69 @@ class Kinematics:
         q[2, 2] = q[3, 2] = atan2(-sqrt(abs(1 - d**2)), d)
 
         q[0, 1] = atan2(s, r) - atan2(2 * a2 * sin(q[0, 2]), a2 + a3 * cos(q[0, 2]))
-        q[1, 1] = pi - atan2(s, r) + atan2(2 * a2 * sin(q[0, 2]), a2 + a3 * cos(q[0, 2]))
-        q[2, 1] = atan2(s, r) - atan2(2 * a2 * sin(q[1, 2]), a2 + a3 * cos(q[1, 2]))
+        q[1, 1] = pi - atan2(s, r) - atan2(2 * a2 * sin(q[0, 2]), a2 + a3 * cos(q[0, 2]))
+        q[2, 1] = atan2(s, r) + atan2(2 * a2 * sin(q[1, 2]), a2 + a3 * cos(q[1, 2]))
         q[3, 1] = pi - atan2(s, r) + atan2(2 * a2 * sin(q[1, 2]), a2 + a3 * cos(q[1, 2]))
 
         # orientation problem
-        def solve_orientation(r36, i=0):
+        def solve_orientation(r36, i=0, select_solve=0):
             eps = numpy.finfo(numpy.float).eps
             if abs(r36[0, 2]) > 10 * eps and r36[0, 2] != r36[1, 2]:
-                q[i, 4] = atan2(sqrt(abs(1 - r36[2, 2])), r36[2, 2])
-                q[i, 3] = atan2(r36[1, 2], r36[0, 2])
-                q[i, 5] = atan2(r36[2, 1], -r36[2, 0])
-                q[i+1, 4] = atan2(-sqrt(abs(1 - r36[2, 2])), r36[2, 2])
-                q[i+1, 3] = atan2(-r36[1, 2], -r36[0, 2])
-                q[i+1, 5] = atan2(-r36[2, 1], r36[2, 0])
+                if select_solve == 0:
+                    q[i, 4] = atan2(sqrt(abs(1 - r36[2, 2]**2)), r36[2, 2])
+                    q[i, 3] = atan2(r36[1, 2], r36[0, 2])
+                    q[i, 5] = atan2(r36[2, 1], -r36[2, 0])
+                elif select_solve == 1:
+                    q[i, 4] = atan2(-sqrt(abs(1 - r36[2, 2]**2)), r36[2, 2])
+                    q[i, 3] = atan2(-r36[1, 2], -r36[0, 2])
+                    q[i, 5] = atan2(-r36[2, 1], r36[2, 0])
             else:
                 print("!psi + phi!")
                 if r36[2, 2] > eps:
-                    q[i, 4] = 0
-                    q[i+1, 4] = 0
-                    # any
-                    q[i, 3] = 0
-                    q[i, 5] = pi
-                    q[i+1, 5] = 0
-                    q[i+1, 3] = pi
+                    if select_solve == 0:
+                        q[i, 4] = -pi
+                        # any
+                        q[i, 3] = 0
+                        q[i, 5] = pi
+                    else:
+                        q[i, 4] = 0
+                        # any
+                        q[i, 5] = 0
+                        q[i, 3] = pi
                 else:
-                    q[i, 4] = pi
-                    q[i+1, 4] = pi
-                    # any
-                    q[i, 3] = 0
-                    q[i, 5] = pi
-                    q[i+1, 5] = 0
-                    q[i+1, 3] = pi
+                    if select_solve == 0:
+                        q[i, 4] = 0
+                        # any
+                        q[i, 3] = 0
+                        q[i, 5] = pi
+                    else:
+                        q[i, 4] = -pi
+                        # any
+                        q[i, 5] = 0
+                        q[i, 3] = pi
 
+        # finding orientation matrix for one of configurations
+        # first tree angles
+        # each configuration have two orientation
+    # for 0 (from matrix q)
         h03 = self.forward(q[0], n=3)
         r03 = h03[:3, :3]
         r36 = dot(transpose(r03), r06)
-        solve_orientation(r36, 0)
-        solve_orientation(r36, 2)
+        solve_orientation(r36, 0, select_solve=0)
+    # for 1 (from matrix q)
+        h03 = self.forward(q[0], n=3)
+        r03 = h03[:3, :3]
+        r36 = dot(transpose(r03), r06)
+        solve_orientation(r36, 1, select_solve=1)
+    # for 2 (from matrix q)
+        h03 = self.forward(q[3], n=3)
+        r03 = h03[:3, :3]
+        r36 = dot(transpose(r03), r06)
+        solve_orientation(r36, 2, select_solve=0)
+    # for 3
+        h03 = self.forward(q[3], n=3)
+        r03 = h03[:3, :3]
+        r36 = dot(transpose(r03), r06)
+        solve_orientation(r36, 3, select_solve=1)
         return q
 
