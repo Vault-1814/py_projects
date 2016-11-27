@@ -47,6 +47,7 @@ class Kinematics:
 
     # inverse kinematics
     def inverse(self, h):
+        eps = numpy.finfo(numpy.float).eps
         q = numpy.zeros(24)
         q.shape = (4, 6)
         d6 = self.d[5]
@@ -57,14 +58,24 @@ class Kinematics:
         o = h[:3, 3]
         oc = o - dot(d6 * r06, [0, 0, 1])
         xc, yc, zc = oc
+
         # position problem
         s = zc - self.d[0]
         r = sqrt(xc**2 + yc**2)
         if xc < 0:
             r *= -1
         d = (s**2 + r**2 - a2**2 - a3**2) / (2 * a2 * a3)
-        q[0, 0] = q[2, 0] = atan2(yc, xc)
-        q[1, 0] = q[3, 0] = pi + atan2(yc, xc)
+        if abs(xc) > 10*eps:
+            xcc = round(-1*(xc))
+        else:
+            xcc = 0
+        if abs(yc) > 10*eps:
+            ycc = round((yc))
+        else:
+            ycc = 0
+
+        q[0, 0] = q[2, 0] = atan2(ycc, xcc)
+        q[1, 0] = q[3, 0] = pi + atan2(ycc, xcc)
 
         q[0, 2] = q[1, 2] = atan2(sqrt(abs(1 - d**2)), d)
         q[2, 2] = q[3, 2] = atan2(-sqrt(abs(1 - d**2)), d)
@@ -74,10 +85,16 @@ class Kinematics:
         q[2, 1] = atan2(s, r) + atan2(2 * a2 * sin(q[1, 2]), a2 + a3 * cos(q[1, 2]))
         q[3, 1] = pi - atan2(s, r) + atan2(2 * a2 * sin(q[1, 2]), a2 + a3 * cos(q[1, 2]))
 
+        def round_rad(ang):
+            for i in range(0, len(ang)):
+                for j in range(0, len(ang[i])):
+                    ang[i, j] = round((ang[i, j]), 5)
+            return ang
+
         # orientation problem
         def solve_orientation(r36, i=0, select_solve=0):
-            eps = numpy.finfo(numpy.float).eps
-            print(r36)
+            round_rad(r36)
+            #print(r36)
             if abs(r36[0, 2]) > 10 * eps or abs(r36[1, 2]) > 10 * eps:
                 if select_solve == 0:
                     q[i, 4] = atan2(sqrt(abs(1 - r36[2, 2]**2)), r36[2, 2])
