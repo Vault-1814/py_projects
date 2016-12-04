@@ -32,7 +32,7 @@ def rad2deg1d(ang):
 def round_rad(ang):
     for i in range(0, len(ang)):
         for j in range(0, len(ang[i])):
-            ang[i, j] = round((ang[i, j]), 5)
+            ang[i, j] = round((ang[i, j]), 3)
     return ang
 
 
@@ -78,29 +78,36 @@ def show_manipulation_clouds():
 
 
 def test_forward_to_inverse():
-    in_q = [0, 100, 90, 0, 10, 0]
+    #in_q = [45, 90, 45, 13, 42, 210]
     # print("sets angles: ", in_q)
-    print("sets angles: ", deg2rad(in_q))
-    print("returns angles: ")
 
-    H06 = ks.forward(in_q)
-    out_q = ks.inverse(H06)
+    H06 = ks.get_orientation_matrix(7 * pi/13, 0 * pi/180, 5 * pi / 3)
+    print(7 * pi/13, 0 * pi/180, 5 * pi / 3)
+    R06 = H06[:3, :3]
+    o = (0, -1, 20)
+    out_q = ks.inverse(o, R06)
+    print(out_q)
+    hh = ks.forward(out_q[0])
 
-    d6 = d[5]
-    r06 = H06[:3, :3]
-    o = H06[:3, 3]
+    print(round_rad(R06))
+    print(round_rad(hh))
+
+    #print(out_q)
+    #d6 = d[5]
+    #r06 = H06[:3, :3]
+    #o = H06[:3, 3]
     # points minus height of first link,
     # because it's a flat case of motion manipulator
-    oc = o - numpy.dot(d6 * r06, [0, 0, 1]) - (0, 0, 10)
-    o = o - (0, 0, 10)
+    #oc = o - numpy.dot(d6 * r06, [0, 0, 1]) - (0, 0, 10)
+    #o = o - (0, 0, 10)
 
-    plot_2d.draw1d(ks.get_dh_d(), in_q, iq=(1, 2, 4), point=oc, point_gripper=o)
-    plot_2d.draw2d(ks.get_dh_d(), out_q, iq=(1, 2, 4), point=oc, point_gripper=o)
+    #plot_2d.draw1d(ks.get_dh_d(), in_q, iq=(1, 2, 4), point=oc, point_gripper=o)
+    #plot_2d.draw2d(ks.get_dh_d(), out_q, iq=(1, 2, 4), point=oc, point_gripper=o)
 
-    print(rad2deg(out_q))
-    print("point oc: ", oc)
-    print("point o: ", o)
-    plot_2d.commit()
+    #print(rad2deg(out_q))
+    #print("point oc: ", oc)
+    #print("point o: ", o)
+    #plot_2d.commit()
 
 
 def trajectory_planning():
@@ -207,7 +214,7 @@ theta = [0, 0, angle, 0, 0, 0]
 
 ks = Kinematics(l, a, alpha, d, theta)
 
-trajectory_planning()
-#test_forward_to_inverse()
+#trajectory_planning()
+test_forward_to_inverse()
 #show_manipulation_clouds()
 

@@ -33,6 +33,13 @@ class Kinematics:
     def get_dh_theta(self):
         return self.theta
 
+    def get_orientation_matrix(self, phi, theta, psi):
+        r_phi = rotation_matrix(psi, (0, 0, 1))
+        r_theta = rotation_matrix(theta, (0, 1, 0))
+        r_psi = rotation_matrix(psi, (0, 0, 1))
+        r = concatenate_matrices(r_phi, r_theta, r_psi)
+        return r
+
     # forward kinematics
     def forward(self, q, n=6):
         h = identity(4)
@@ -46,36 +53,26 @@ class Kinematics:
         return h
 
     # inverse kinematics
-    def inverse(self, h):
+    def inverse(self, o, r06):
         eps = numpy.finfo(numpy.float).eps
         q = numpy.zeros(24)
         q.shape = (4, 6)
         d6 = self.d[5]
         a2 = self.a[1]
         a3 = 2 * self.a[1]
-        r06 = h[:3, :3]
 
-        o = h[:3, 3]
         oc = o - dot(d6 * r06, [0, 0, 1])
         xc, yc, zc = oc
 
         # position problem
         s = zc - self.d[0]
         r = sqrt(xc**2 + yc**2)
-        if xc < 0:
-            r *= -1
+        #if xc < 0:
+            #r *= -1
         d = (s**2 + r**2 - a2**2 - a3**2) / (2 * a2 * a3)
-        if abs(xc) > 10*eps:
-            xcc = round(-1*(xc))
-        else:
-            xcc = 0
-        if abs(yc) > 10*eps:
-            ycc = round((yc))
-        else:
-            ycc = 0
 
-        q[0, 0] = q[2, 0] = atan2(ycc, xcc)
-        q[1, 0] = q[3, 0] = pi + atan2(ycc, xcc)
+        q[0, 0] = q[2, 0] = atan2(yc, xc)
+        q[1, 0] = q[3, 0] = pi + atan2(yc, xc)
 
         q[0, 2] = q[1, 2] = atan2(sqrt(abs(1 - d**2)), d)
         q[2, 2] = q[3, 2] = atan2(-sqrt(abs(1 - d**2)), d)
