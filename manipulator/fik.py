@@ -37,8 +37,8 @@ class Kinematics:
         r_phi = rotation_matrix(psi, (0, 0, 1))
         r_theta = rotation_matrix(theta, (0, 1, 0))
         r_psi = rotation_matrix(psi, (0, 0, 1))
-        r = concatenate_matrices(r_phi, r_theta, r_psi)
-        return r
+        h = concatenate_matrices(r_phi, r_theta, r_psi)
+        return h[:3, :3]
 
     # forward kinematics
     def forward(self, q, n=6):
