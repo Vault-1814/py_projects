@@ -112,44 +112,23 @@ def test_forward_to_inverse():
 def trajectory_planning():
 
     C = [
-        [1, 0, 0, 0,   0, 0, 0, 0,     0, 0, 0, 0,     0, 0],
-        [0, 1, 0, 0,   0, 0, 0, 0,     0, 0, 0, 0,     0, 0],
-        [0, 0, 1, 0,   0, 0, 0, 0,     0, 0, 0, 0,     0, 0],
-        [0, 0, 0, 1,   1, 0, 0, 0,     0, 0, 0, 0,     0, 0],
+        [1, 1, 0,    0, 0, 0,    0, 0, 0],
+        [-3,-4, 1,    0, 0, 0,    0, 0, 0],
+        [-3,-6, 0,    1, 0, 0,    0, 0, 0],
 
-        [0, 0, 0, 0,   0, 1, 0, 0,     0, 0, 0, 0,     0, 0],
-        [0,-1,-2,-3,  -4, 0, 1, 0,     0, 0, 0, 0,     0, 0],
-        [0, 0, 0,-3,  -6, 0, 0, 1,     0, 0, 0, 0,     0, 0],
-        [0, 0, 0, 0,   0, 0, 1, 1,     1, 0, 0, 0,     0, 0],
+        [0, 0, 1,    1, 1, 0,    0, 0, 0],
+        [0, 0,-1,   -2,-3, 1,    0, 0, 0],
+        [0, 0, 0,   -1,-3, 0,    1, 0, 0],
 
-        [0, 0, 0, 0,   0, 0, 0, 0,     0, 1, 0, 0,     0, 0],
-        [0, 0, 0, 0,   0, 0,-1,-2,    -3, 0, 1, 0,     0, 0],
-        [0, 0, 0, 0,   0, 0, 0,-1,    -3, 0, 0, 1,     0, 0],
-        [0, 0, 0, 0,   0, 0, 0, 0,     0, 1, 1, 1,     1, 1],
-
-        [0, 0, 0, 0,   0, 0, 0, 0,     0, 0, 1, 2,     3, 4],
-        [0, 0, 0, 0,   0, 0, 0, 0,     0, 0, 0, 2,     6, 12],
+        [0, 0, 0,    0, 0, 1,    1, 1, 1],
+        [0, 0, 0,    0, 0, 1,    2, 2, 4],
+        [0, 0, 0,    0, 0, 0,    2, 6, 12],
     ]
 
-
-
-
-    t1 = 1
-    t2 = 1
-    tn = 1
-
-    v_0 = 0
-    a_0 = 0
-    v_1 = 0.1
-    a_1 = 0.1
-    v_2 = 0.1
-    a_2 = 0.1
-    v_n = 0
-
-    o1 = (10, 0, 10)
-    o2 = (10, 0, 15)
-    o3 = (-10, 0, 15)
-    o4 = (-10, 0, 10)
+    o1 = (10, 10, 10)
+    o2 = (10, 10, 15)
+    o3 = (-10, -10, 15)
+    o4 = (-10, -10, 0)
 
     R06 = ks.get_orientation_matrix(0, 0, 0)
     q_i = ks.inverse(o1, R06)[0]
@@ -157,80 +136,60 @@ def trajectory_planning():
     q_a = ks.inverse(o3, R06)[0]
     q_f = ks.inverse(o4, R06)[0]
 
-    yy = [q_i, 0, 0, q_d + q_i, q_d, 0, 0, q_a - q_d, q_a, 0, 0, q_f, 0, 0]
-
-    x = numpy.dot(numpy.invert(C), numpy.transpose(yy))
-
     hi = ks.forward(q_i)
     hd = ks.forward(q_d)
     ha = ks.forward(q_a)
     hf = ks.forward(q_f)
+
+    # plot points on a diagram
     fig = plt.figure(1)
     ax = fig.gca(projection='3d')
-    x = [hi[0,3], hd[0,3], ha[0,3], hf[0,3]]
-    y = [hi[1,3], hd[1,3], ha[1,3], hf[1,3]]
-    z = [hi[2,3], hd[2,3], ha[2,3], hf[2,3]]
+    x = [hi[0, 3], hd[0, 3], ha[0, 3], hf[0, 3]]
+    y = [hi[1, 3], hd[1, 3], ha[1, 3], hf[1, 3]]
+    z = [hi[2, 3], hd[2, 3], ha[2, 3], hf[2, 3]]
     ax.plot(x, y, z, "kx")
 
     SO = []
     for i in range(0, 6):
-        a0 = q_0[i]
-        a1 = v_0 * t1
-        a2 = a_0 * t1**2 / 2
-        a3 = 4 * q_1[i] - v_1 * t1 - 2 * a2 - 3 * a1 - 4 * a0
-        a4 = -3 * q_1[i] + v_1 * t1 + a2 + 2 * a1 + 3 * a0
-
-        b0 = q_1[i]
-        b1 = a1 + 2 * a2 + 3 * a3 + 4 * a4
-        b2 = 2 * a2 + 6 * a3 + 12 * a4
-        b3 = q_2[i] - b0 - b1 - b2
-        #b3 = (v_2 * t2 - 2 * b2) / 3
-        # b3 = (a_2 * t2**2 - 2 * b2) / 6
-        #b3 = (v_2 - q_2[i] + b0 - b2) / 2
-
-        c0 = q_2[i]
-        c1 = v_2 * tn
-        c2 = a_2 * tn**2 / 2
-        c3 = 4 * q_n[i] - v_n * tn - 2 * c2 - 3 * c1 - 4 * c0
-        c4 = -3 * q_n[i] + v_n * tn + c2 + 2 * c1 + 3 * c0
-
-        a = [a0, a1, a2, a3, a4]
-        b = [b0, b1, b2, b3]
-        c = [c0, c1, c2, c3, c4]
+        yy = [q_d[i] - q_i[i], 0, 0, q_a[i] - q_d[i], 0, 0, q_f[i] - q_a[i], 0, 0]
+        x = numpy.linalg.solve(C, yy)
+        # sets
+        a0 = q_i[i]
+        a1 = 0
+        a2 = 0
+        b0 = q_d[i]
+        c0 = q_a[i]
+        a = [a0, a1, a2, x[0], x[1]]
+        b = [b0, x[2], x[3], x[4]]
+        c = [c0, x[5], x[6], x[7], x[8]]
         coefs_poly = [a, b, c]
         exps_poly = [4, 3, 4]
-
         n = 4
         step = 0.1
-        tau = (0, 5, 15, 20)
+        tau = (0, 5, 10, 15)
 
         def get_t(j, i):
             return (j - tau[i-1]) / (tau[i] - tau[i-1])
 
-        time = numpy.arange(tau[0], tau[n-1], step)
+        time = numpy.arange(tau[0], tau[n-1]+1, step)
         curve = []
         for j in time:
             if tau[0] <= j <= tau[1]:
                 i = 0
-                q = poly(exps_poly[i], coefs_poly[i], get_t(j, i + 1))
-
             elif tau[1] <= j <= tau[2]:
                 i = 1
-                q = poly(exps_poly[i], coefs_poly[i], get_t(j, i + 1))
-
             elif tau[2] <= j <= tau[3]:
                 i = 2
-                q = poly(exps_poly[i], coefs_poly[i], get_t(j, i + 1))
+            q = poly(exps_poly[i], coefs_poly[i], get_t(j, i + 1))
             curve.append(q)
         plt.figure(2)
         plt.plot(time, curve, "b")
         plt.grid(True)
         SO.append(curve)
-        #print(SO)
     x = []
     y = []
     z = []
-    for i in range(0, 200):
+    for i in range(0, 151):
         q = []
         for j in range(0, 6):
             q.append(SO[j][i])
@@ -241,8 +200,6 @@ def trajectory_planning():
     ax.plot(x, y, z, "g")
     # ax.plot_wireframe(x, y, z, rstride=10, cstride=10)
     plt.show()
-
-
 
 # DH parameters
 l = 10  # length of link
@@ -257,24 +214,3 @@ ks = Kinematics(l, a, alpha, d, theta)
 trajectory_planning()
 #test_forward_to_inverse()
 #show_manipulation_clouds()
-
-C = [
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-
-    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, -1, -2, -3, -4, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, -3, -6, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0],
-
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, -1, -2, -3, 0, 1, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, -1, -3, 0, 0, 1, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 6, 12],
-]
-
