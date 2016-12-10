@@ -1,15 +1,17 @@
-from _dbus_bindings import Array
-from math import pi, factorial
-from fik import Kinematics
-import plot_2d
-from mpl_toolkits.mplot3d import Axes3D
+
 import numpy
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib import cm
 import math
+import plot_2d
+from _dbus_bindings import Array
+from math import pi, factorial
+from fik import Kinematics
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
 
 
+# my body is lazzzzy, because its there
 def deg2rad(ang):
     for i in range(0, len(ang)):
         ang[i] = ang[i] * pi / 180
@@ -36,6 +38,8 @@ def round_rad(ang):
     return ang
 
 
+# Calculation value of polynomial h(t) for itself order,
+#   derivative, coefficients (k = (a0, a1, a2 etc.) ) and time
 def poly(order, k, t, derivative=0):
     h = 0
     for i in range(derivative, order + 1):
@@ -72,26 +76,23 @@ def show_manipulation_clouds():
             y.append(h[1, 3])
             z.append(h[2, 3])
         print(round(i*100/360), "%")
-    #ax.plot(x, y, z, "bo")
+    ax.plot(x, y, z, "bo")
     #ax.plot_wireframe(x, y, z, rstride=10, cstride=10)
     plt.show()
 
 
 def test_forward_to_inverse():
-    #in_q = [45, 90, 45, 13, 42, 210]
-    # print("sets angles: ", in_q)
-
-    R06 = ks.get_orientation_matrix(7 * pi/13, 0 * pi/180, 5 * pi / 3)
-    print(7 * pi/13, 0 * pi/180, 5 * pi / 3)
+    ph, th, ps = (7 * pi/13, 0 * pi/180, 5 * pi / 3)
+    R06 = ks.get_orientation_matrix(ph, th, ps)
+    print(ph, th, ps)
     o = (10, 0, 10)
     out_q = ks.inverse(o, R06)
     print(out_q)
     hh = ks.forward(out_q[0])
-
     print(round_rad(R06))
     print(round_rad(hh))
 
-    #print(out_q)
+    #for y = 0
     #d6 = d[5]
     #r06 = H06[:3, :3]
     #o = H06[:3, 3]
@@ -99,10 +100,8 @@ def test_forward_to_inverse():
     # because it's a flat case of motion manipulator
     #oc = o - numpy.dot(d6 * r06, [0, 0, 1]) - (0, 0, 10)
     #o = o - (0, 0, 10)
-
     #plot_2d.draw1d(ks.get_dh_d(), in_q, iq=(1, 2, 4), point=oc, point_gripper=o)
     #plot_2d.draw2d(ks.get_dh_d(), out_q, iq=(1, 2, 4), point=oc, point_gripper=o)
-
     #print(rad2deg(out_q))
     #print("point oc: ", oc)
     #print("point o: ", o)
@@ -110,7 +109,7 @@ def test_forward_to_inverse():
 
 
 def trajectory_planning():
-
+    # magic matrix for 4-3-4 trajectory
     C = [
         [1, 1, 0,    0, 0, 0,    0, 0, 0],
         [-3,-4, 1,    0, 0, 0,    0, 0, 0],
@@ -124,23 +123,21 @@ def trajectory_planning():
         [0, 0, 0,    0, 0, 1,    2, 2, 4],
         [0, 0, 0,    0, 0, 0,    2, 6, 12],
     ]
-
+    # i, d, a and f points
     o1 = (10, 10, 10)
     o2 = (10, 10, 15)
     o3 = (-10, -10, 15)
     o4 = (-10, -10, 0)
-
+    # Kinematics.get_orientation_matrix(0, 0, 0)
     R06 = ks.get_orientation_matrix(0, 0, 0)
     q_i = ks.inverse(o1, R06)[0]
     q_d = ks.inverse(o2, R06)[0]
     q_a = ks.inverse(o3, R06)[0]
     q_f = ks.inverse(o4, R06)[0]
-
     hi = ks.forward(q_i)
     hd = ks.forward(q_d)
     ha = ks.forward(q_a)
     hf = ks.forward(q_f)
-
     # plot points on a diagram
     fig = plt.figure(1)
     ax = fig.gca(projection='3d')
@@ -148,12 +145,11 @@ def trajectory_planning():
     y = [hi[1, 3], hd[1, 3], ha[1, 3], hf[1, 3]]
     z = [hi[2, 3], hd[2, 3], ha[2, 3], hf[2, 3]]
     ax.plot(x, y, z, "kx")
-
     SO = []
     for i in range(0, 6):
-        yy = [q_d[i] - q_i[i], 0, 0, q_a[i] - q_d[i], 0, 0, q_f[i] - q_a[i], 0, 0]
-        x = numpy.linalg.solve(C, yy)
-        # sets
+        b = [q_d[i] - q_i[i], 0, 0, q_a[i] - q_d[i], 0, 0, q_f[i] - q_a[i], 0, 0]
+        x = numpy.linalg.solve(C, b)
+        # known
         a0 = q_i[i]
         a1 = 0
         a2 = 0
@@ -168,6 +164,7 @@ def trajectory_planning():
         step = 0.1
         tau = (0, 5, 10, 15)
 
+        # relative time from absolutly
         def get_t(j, i):
             return (j - tau[i-1]) / (tau[i] - tau[i-1])
 
@@ -176,9 +173,9 @@ def trajectory_planning():
         for j in time:
             if tau[0] <= j <= tau[1]:
                 i = 0
-            elif tau[1] <= j <= tau[2]:
+            elif tau[1] < j <= tau[2]:
                 i = 1
-            elif tau[2] <= j <= tau[3]:
+            elif tau[2] < j <= tau[3]:
                 i = 2
             q = poly(exps_poly[i], coefs_poly[i], get_t(j, i + 1))
             curve.append(q)
@@ -211,6 +208,6 @@ theta = [0, 0, angle, 0, 0, 0]
 
 ks = Kinematics(l, a, alpha, d, theta)
 
-trajectory_planning()
-#test_forward_to_inverse()
 #show_manipulation_clouds()
+#test_forward_to_inverse()
+trajectory_planning()

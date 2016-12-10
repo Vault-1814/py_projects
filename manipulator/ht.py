@@ -1,6 +1,5 @@
-"""
-    homogeneous transformations are fun!
-"""
+#!/bin/env python
+# homogeneous transformations are fun!
 import math
 import numpy as np
 

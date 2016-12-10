@@ -1,6 +1,8 @@
+#!/bin/env python
 import numpy as np
 import matplotlib.pyplot as plt
 from math import sin, cos
+
 
 m = 60
 plt.xlim(-m, m)
@@ -10,16 +12,20 @@ plt.vlines(0, -m, m)
 plt.grid(True)
 
 
+# The method makes x,y coordinates for plotting on plot :)
+# короче, берет длину звена(отрезка), угол theta, начальную координату
+#   и возвращает координату конца звена(отрезка)
 def f(l, angle, x0, y0):
     # d**2 = (x - x0)**2 + (y - y0)**2
     if l == 0:
+        # BECAUSE!1!! OLOLOLO
         l = 10
     oy = l * sin(angle) + y0
     ox = l * cos(angle) + x0
     return ox, oy
 
 
-def draw2d(l, q, iq=(1, 2, 4), point=[0, 0, 0], point_gripper=[0, 0, 0]):
+def draw2d(l, q, iq=(1, 2, 4), point=(0, 0, 0), point_gripper=(0, 0, 0)):
     subplot = 221
     qty_points = len(iq) + 1
     for k in range(0, len(q)):
@@ -49,7 +55,7 @@ def draw2d(l, q, iq=(1, 2, 4), point=[0, 0, 0], point_gripper=[0, 0, 0]):
             plt.plot(-point_gripper[0], point_gripper[2], 'mo')
 
 
-def draw1d(l, q, iq=(1, 2, 4), point=[0, 0, 0], point_gripper=[0, 0, 0]):
+def draw1d(l, q, iq=(1, 2, 4), point=(0, 0, 0), point_gripper=(0, 0, 0)):
     qty_points = len(iq) + 1
     x = np.zeros(qty_points)
     y = np.zeros(qty_points)

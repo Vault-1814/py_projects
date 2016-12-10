@@ -1,11 +1,8 @@
 #!/bin/env python
-"""
-    solving forward and inverse kinematics problems
-"""
-from numpy import identity, dot, sign, transpose
+# solving forward and inverse kinematics problems
 import numpy
 from math import pi, cos, sin, atan2, sqrt
-import math
+from numpy import identity, dot, sign, transpose
 from ht import translation_matrix, rotation_matrix, concatenate_matrices
 
 
@@ -33,7 +30,8 @@ class Kinematics:
     def get_dh_theta(self):
         return self.theta
 
-    def get_orientation_matrix(self, phi, theta, psi):
+    # TODO static method, lol :D
+    def  get_orientation_matrix(self, phi, theta, psi):
         r_phi = rotation_matrix(psi, (0, 0, 1))
         r_theta = rotation_matrix(theta, (0, 1, 0))
         r_psi = rotation_matrix(psi, (0, 0, 1))
@@ -55,8 +53,9 @@ class Kinematics:
     # inverse kinematics
     def inverse(self, o, r06):
         eps = numpy.finfo(numpy.float).eps
-        q = numpy.zeros(24)
+        q = numpy.zeros(24) # 24, because 4 solves
         q.shape = (4, 6)
+
         d6 = self.d[5]
         a2 = self.a[1]
         a3 = 2 * self.a[1]
@@ -67,31 +66,22 @@ class Kinematics:
         # position problem
         s = zc - self.d[0]
         r = sqrt(xc**2 + yc**2)
-        #if xc < 0:
-            #r *= -1
         d = (s**2 + r**2 - a2**2 - a3**2) / (2 * a2 * a3)
-
+        # theta 1
         q[0, 0] = q[2, 0] = atan2(yc, xc)
         q[1, 0] = q[3, 0] = pi + atan2(yc, xc)
-
+        # theta 3
         q[0, 2] = q[1, 2] = atan2(sqrt(abs(1 - d**2)), d)
         q[2, 2] = q[3, 2] = atan2(-sqrt(abs(1 - d**2)), d)
-
+        # theta 2
         q[0, 1] = atan2(s, r) - atan2(2 * a2 * sin(q[0, 2]), a2 + a3 * cos(q[0, 2]))
         q[1, 1] = pi - atan2(s, r) - atan2(2 * a2 * sin(q[0, 2]), a2 + a3 * cos(q[0, 2]))
         q[2, 1] = atan2(s, r) + atan2(2 * a2 * sin(q[1, 2]), a2 + a3 * cos(q[1, 2]))
         q[3, 1] = pi - atan2(s, r) + atan2(2 * a2 * sin(q[1, 2]), a2 + a3 * cos(q[1, 2]))
 
-        def round_rad(ang):
-            for i in range(0, len(ang)):
-                for j in range(0, len(ang[i])):
-                    ang[i, j] = round((ang[i, j]), 5)
-            return ang
-
         # orientation problem
+        # i - is one of four solves for position problem
         def solve_orientation(r36, i=0, select_solve=0):
-            round_rad(r36)
-            #print(r36)
             if abs(r36[0, 2]) > 10 * eps or abs(r36[1, 2]) > 10 * eps:
                 if select_solve == 0:
                     q[i, 4] = atan2(sqrt(abs(1 - r36[2, 2]**2)), r36[2, 2])
@@ -102,7 +92,7 @@ class Kinematics:
                     q[i, 3] = atan2(-r36[1, 2], -r36[0, 2])
                     q[i, 5] = atan2(-r36[2, 1], r36[2, 0])
             else:
-                print("!psi + phi!")
+                # TODO both - theta 3 and theta 5 - must be found from matrix R36
                 if r36[2, 2] > 0:
                     if select_solve == 0:
                         q[i, 4] = 0
@@ -127,7 +117,7 @@ class Kinematics:
                         q[i, 5] = atan2(r36[1, 0], r36[0, 0])
 
         # finding orientation matrix for one of configurations
-        # first tree angles
+        #   first tree angles
         # each configuration have two orientation
     # for 0 (from matrix q)
         h03 = self.forward(q[0], n=3)
