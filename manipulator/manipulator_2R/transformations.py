@@ -4,6 +4,15 @@ import math
 import numpy as np
 
 
+# Euler angels ZYZ
+def get_orientation_matrix(phi, theta, psi):
+    r_phi = rotation_matrix(phi, (0, 0, 1))
+    r_theta = rotation_matrix(theta, (0, 1, 0))
+    r_psi = rotation_matrix(psi, (0, 0, 1))
+    h = concatenate_matrices(r_phi, r_theta, r_psi)
+    return h[:3, :3]
+
+
 def unit_vector(data, axis=None, out=None):
     if out is None:
         data = np.array(data, dtype=np.float64, copy=True)
