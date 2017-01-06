@@ -27,22 +27,32 @@ def plotMany(interval, lables, *vectors2xN):
 
 # must call plt.show() after call it function
 def plotTrajectory(q, dq, ddq, time, num_figure=0, color="r"):
-    title = "Coordinate q%s" % (num_figure)
+    title = "Generalized coordinate q%s" % (num_figure)
     plt.figure(title)
     plt.subplot(311)
     plt.plot(time, q, color)
+    plt.ylabel('q, [rad]')
+    plt.xlabel('t, [sec]')
+    plt.grid(True)
     plt.subplot(312)
     plt.plot(time, dq, color)
+    plt.ylabel('dq, [rad/sec]')
+    plt.xlabel('t, [sec]')
+    plt.grid(True)
     plt.subplot(313)
     plt.plot(time, ddq, color)
+    plt.ylabel('ddq, [rad/sec^2]')
+    plt.xlabel('t, [sec]')
+    plt.grid(True)
     print('[WARNING] Should call plt.show()')
 
 
+# after call must be call plt.show()
 def plotTrajectories(Q, dQ, ddQ, interval):
     time = numpy.arange(interval[0], interval[1]+interval[2], interval[2])
     for i in range(0, len(Q)):
         plotTrajectory(Q[i], dQ[i], ddQ[i], time, i+1)
-    plt.show()
+    #plt.show()
 
 
 
@@ -116,6 +126,5 @@ def plotAllDynamics():
     plt.plot(time, U[1], "r-.", label='u')
     plt.legend(loc='upper right', shadow=True, fontsize='x-small')
     plt.grid(True)
-
     #plt.show()
     plotTrajectories(q, q2, q3, trajectory.interval)

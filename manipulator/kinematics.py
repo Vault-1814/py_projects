@@ -1,15 +1,16 @@
 #!/bin/env python
 # solving forward and inverse kinematics problems
-import numpy
 from math import pi, cos, sin, atan2, sqrt
-from numpy import identity, dot, sign, transpose
-from ht import translation_matrix, rotation_matrix, concatenate_matrices
+
+import numpy
+from numpy import identity, dot, transpose
+from transformations import *
 
 
 class Kinematics:
 
-    def __init__(self, l, a, alpha, d, theta):
-        self.l = l
+    def __init__(self, a, alpha, d, theta):
+        self.l = 0
         self.a = a
         self.alpha = alpha
         self.d = d
@@ -31,6 +32,7 @@ class Kinematics:
         return self.theta
 
     # TODO static method, lol :D
+    # why phi not used?? it should be test!!!
     def  get_orientation_matrix(self, phi, theta, psi):
         r_phi = rotation_matrix(psi, (0, 0, 1))
         r_theta = rotation_matrix(theta, (0, 1, 0))

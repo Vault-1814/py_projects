@@ -61,16 +61,13 @@ def NE(q, dq, ddq, ks, G=9.81):
     for i in range(1, robot.N + 1):
         transposedR = transpose(R(ks, q, i-1, i))
         omega[:, i] = transposedR.dot(omega[:, i-1] + dq[i-1] * robot.z[:, i-1])
-#        dOmega[:, i] = transposedR.dot(dOmega[:, i-1] + ddq[i-1] * robot.z[:, i-1] +
-#                                       cross(dq[i-1] * omega[:, i-1], robot.z[:, i-1]))
-        dOmega[:, i] = transposedR.dot(dOmega[:, i-1]) + ddq[i-1] * robot.z[:, i-1] + \
-                       cross(transposedR.dot(omega[:, i-1]), dq[i-1] * robot.z[:, i-1])
-
+        dOmega[:, i] = transposedR.dot(dOmega[:, i-1] + ddq[i-1] * robot.z[:, i-1] +
+                                               cross(dq[i-1] * omega[:, i-1], robot.z[:, i-1]))
         # vec_r[:, i-1] because len(vec_r) == 2 and index of first element is equals to 0 and i start from 1
         a[:, i] = transposedR.dot(a[:, i-1] + cross(dOmega[:, i], robot.vec_r[:, i-1]) +
-                                              cross(omega[:, i], cross(omega[i], robot.vec_r[:, i-1])))
+                                  cross(omega[:, i], cross(omega[i], robot.vec_r[:, i-1])))
         ac[:, i] = a[:, i] + cross(dOmega[i], robot.vec_rc[:, i-1]) + \
-                             cross(omega[i], cross(omega[i], robot.vec_rc[:, i-1]))
+               cross(omega[i], cross(omega[i], robot.vec_rc[:, i-1]))
 
     for i in range(robot.N, 0, -1):
         Icf = I(robot.m[i-1], robot.l[i-1], robot.diameter[i-1] / 2)
@@ -85,3 +82,5 @@ def NE(q, dq, ddq, ks, G=9.81):
         u[:, i] = transpose(tau[:, i]) * robot.z[:, i-1] + robot.nu[i-1] * dq[i-1]
         #print(u)
     return u[2][1:3]
+
+

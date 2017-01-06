@@ -6,7 +6,7 @@ import math
 import plot_2d
 from _dbus_bindings import Array
 from math import pi, factorial
-from fik import Kinematics
+from kinematics import Kinematics
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
@@ -206,7 +206,7 @@ a = [0, l, 0, 0, 0, 0]
 alpha = [angle, 0, angle, -angle, angle, 0]
 theta = [0, 0, angle, 0, 0, 0]
 
-ks = Kinematics(l, a, alpha, d, theta)
+ks = Kinematics(a, alpha, d, theta)
 
 #show_manipulation_clouds()
 #test_forward_to_inverse()

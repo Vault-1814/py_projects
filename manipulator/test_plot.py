@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from fik import *
+from kinematics import *
 import numpy as np
 
 fig = plt.figure()

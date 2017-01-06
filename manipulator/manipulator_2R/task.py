@@ -1,5 +1,4 @@
 import numpy
-
 # my modules
 from kinematics import *
 from trajectory import *
@@ -13,7 +12,6 @@ from graphics import *
 #       second row for second link
 def invdyn(Q, dQ, ddQ, ks, G=9.81):
     U = zeros((robot.N, len(Q[0])))
-
     for i in range(0, len(Q[0])):
         u = NE(Q[:, i], dQ[:, i], ddQ[:, i], ks, G)
         U[:, i] = u
@@ -26,18 +24,20 @@ def main():
                                  trajectory.initDotQ,
                                  trajectory.initDDotQ,
                                  trajectory.interval)
+    plotTrajectories(Q, dQ, ddQ, trajectory.interval)
+
     zero = zeros((robot.N, len(Q[0])))
     e = zero.copy()
 
-    # complete inverse dynamics
+    # (a) complete inverse dynamics
     U = invdyn(Q, dQ, ddQ, ks)
-    # gravity terms
+    # (b) gravity terms
     g = invdyn(Q, zero, zero, ks)
 
-    # centrifugal and Coriolis terms
+    # (c) centrifugal and Coriolis terms
     c = invdyn(Q, dQ, zero, ks, G=0)
 
-    # i-th column of the inertia matrix
+    # (d) i-th column of the inertia matrix
     qty_elements = (trajectory.interval[1] - trajectory.interval[0]) / trajectory.interval[2] + 1
     MmatrixJoint1 = zeros((robot.N, qty_elements))
     MmatrixJoint2 = zeros((robot.N, qty_elements))
@@ -49,7 +49,7 @@ def main():
         MmatrixJoint1[j - 1] = Mcol[0]
         MmatrixJoint2[j - 1] = Mcol[1]
 
-    # generalized momentum
+    # (e) generalized momentum
     Mt = invdyn(Q, zero, dQ, ks, G=0)
 
     lables = ('complete inverse dynamics',
