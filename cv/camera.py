@@ -36,7 +36,7 @@ class VideoCV:
         self.WIDTH_PIXEL = 85 # nexus 5 1920x1080
         self.em = 'px'
 
-    def getRawFrame(self, resize=False, height=1920, width=1080):
+    def getRawFrame(self, resize=False, height=300, width=300):
         frame = self.cam.getFrame()
         if resize:
             frame = cv2.resize(frame, (height, width))
@@ -63,7 +63,7 @@ class VideoCV:
     def getContours(self, thresh):
         contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         #contours = contours[0] if imutils.is_cv2() else contours[1]
-        (contours, _) = imutils.contours.sort_contours(contours)
+        #(contours, _) = imutils.contours.sort_contours(contours)
         return contours
 
     # only for convex hull
@@ -107,15 +107,7 @@ class VideoCV:
 #        cv2.circle(orig, (int(tlblX), int(tlblY)), 5, (255, 0, 0), -1)
 #        cv2.circle(orig, (int(trbrX), int(trbrY)), 5, (255, 0, 0), -1)
         # draw lines between the midpoints
-        cv2.line(orig, (int(tltrX), int(tltrY)), (int(blbrX), int(blbrY)), (255, 0, 255), 2)
-        cv2.line(orig, (int(tlblX), int(tlblY)), (int(trbrX), int(trbrY)), (255, 0, 255), 2)
-        # draw the object sizes on the image
-        cv2.putText(orig, "{:.1f}px".format(dimA),
-                    (int(tltrX - 15), int(tltrY - 10)), cv2.FONT_HERSHEY_SIMPLEX,
-                    0.65, (255, 255, 255), 2)
-        cv2.putText(orig, "{:.1f}px".format(dimB),
-                    (int(trbrX + 10), int(trbrY)), cv2.FONT_HERSHEY_SIMPLEX,
-                    0.65, (255, 255, 255), 2)
+
         return orig
 
     def drawContourEx(self, canvas, contour, color=(0, 0, 255)):
@@ -144,13 +136,8 @@ class VideoCV:
         while True:
             self.clearCanvas(canvas)
             frame = self.getRawFrame()
-            thresh = self.getThresholdImage(frame)
-            contours = self.getContours(thresh.copy())
-            for i in range(0, len(contours)):
-                approx = self.getApprox(contours[i])
-                self.drawContourEx(canvas, approx)
-            cv2.imshow('frame0', thresh)
-            cv2.imshow('frame1', canvas)
+
+            cv2.imshow('frame0', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         self.cam.release()
@@ -170,8 +157,8 @@ class VideoCV:
             for c in cnts:
                 if cv2.contourArea(c) < 500:
                     continue
-                orig = self.printGeometryOfObject(c, frame)
-            cv2.imshow('frame2', orig)
+                #orig = self.printGeometryOfObject(c, frame)
+            cv2.imshow('frame2', frame)
             #cv2.imshow('frame3', canvas)
             #cv2.imshow('frame4', gray)
 
@@ -182,8 +169,8 @@ class VideoCV:
 
 def main():
     url = 'http://192.168.1.33:4747/mjpegfeed?1920x1080'
-    camera = Camera(url)
+    camera = Camera(1)
     videoCV = VideoCV(camera)
-    #videoCV.run()
-    videoCV.measures_demo()
+    videoCV.run()
+    #videoCV.measures_demo()
 main()

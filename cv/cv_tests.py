@@ -76,3 +76,11 @@ def shape_callback(msg):
     plt.show()
 
 shape_callback(1)
+
+for i in range(0, len(contours)):
+    if cv2.contourArea(contours[i]) < 100:
+        continue
+    approx = self.getApprox(contours[i])
+    self.drawContourEx(canvas, approx)
+
+cv2.imshow('frame1', canvas)

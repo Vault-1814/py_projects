@@ -26,6 +26,7 @@ import cv2
 from common import Sketcher
 
 class App:
+
     def __init__(self, fn):
         self.img = cv2.imread(fn)
         if self.img is None:
