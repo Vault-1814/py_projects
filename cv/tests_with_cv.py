@@ -3,20 +3,17 @@ import cv2
 import imutils
 from matplotlib import pyplot as plt
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
-_, frame = cap.read()
-hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-plt.imshow(hsv)
 
-plt.show()
+while True:
+    _, frame = cap.read()
 
-while False:
-    cv2.imshow("a", hsv)
+    print(frame.shapexx)
 
+    cv2.imshow("a", frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-
 
 # When everything done, release the capture
 cap.release()

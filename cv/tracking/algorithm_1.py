@@ -6,7 +6,7 @@ import argparse
 import imutils
 import cv2
 
-DEV_VIDEO = 0
+DEV_VIDEO = 1
 
 
 camera = cv2.VideoCapture(DEV_VIDEO)

@@ -15,7 +15,7 @@ def getPointsForTracking(image, qmax, q, dist):
 
 
 # frame = "../raw_images/for_descriptor.jpg"
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 while True:
     m, q,d = tbs.get_trackbar_values()
     _, frame = cap.read()
