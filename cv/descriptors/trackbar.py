@@ -10,16 +10,16 @@ class Filter:
 
 
 class Trackbar:
-    def __init__(self, *filters):
-        self.winName = "Trackbars"
+    def __init__(self, win_name, *filters):
+        self.win_name = win_name
         self.all_filters = []
-        self.addFilters(filters)
+        self.add_filters(filters)
         self.setup_trackbars(self.all_filters)
 
-    def addFilter(self, filter):
+    def add_filter(self, filter):
         self.all_filters.append(filter)
 
-    def addFilters(self, *filters):
+    def add_filters(self, *filters):
         for f in filters[0]:
             print(f.title)
             self.all_filters.append(f)
@@ -28,21 +28,19 @@ class Trackbar:
         pass
 
     def setup_trackbars(self, range_filter):
-        cv2.namedWindow(self.winName, 0)
-        for j in range_filter:
-            for i in ["MIN"]:
-                v = j.min if i == "MIN" else j.max
-                cv2.createTrackbar("%s_%s" % (j.title, i), self.winName, int(j.value), j.max, self.callback)
+        cv2.namedWindow(self.win_name, 0)
+        for i in range_filter:
+            cv2.createTrackbar(str(i.title), self.win_name, int(i.value), i.max, self.callback)
 
     def get_trackbar_values(self):
         values = []
-        for i in ["MIN"]:
-            for j in self.all_filters:
-                v = cv2.getTrackbarPos("%s_%s" % (j.title, i), self.winName)
-                values.append(v)
+        for i in self.all_filters:
+            v = cv2.getTrackbarPos(str(i.title), self.win_name)
+            values.append(v)
         return values
 
-    def getTrackbarValue(self, filter_title):
+    def get_trackbar_value(self, filter_title):
         for f in self.all_filters:
+            print(f.title, filter_title)
             if f.title == filter_title:
-                return cv2.getTrackbarPos(f.title, self.winName)
+                return cv2.getTrackbarPos(str(f.title), self.win_name)

@@ -97,50 +97,106 @@ def main():
     thauthends = length // qty
     print(length, thauthends)
 
-    """
+
     info = []
+    about = []
+    polit = []
+    religion = []
+    inspir = []
+    pmain = []
+    lmain = []
+
+    relat = []
+
+    status = []
     for i in range(0, thauthends):
         ids1000 = s[i * qty:(i+1) * qty]
         # получааем кучу инфы об этих людях
         method = 'users.get'
         params['user_ids'] = str(ids1000)
-        params['fields'] = 'photo_id, verified, sex, bdate, city, ' \
-                           'country, home_town, has_photo, photo_50, ' \
-                           'photo_100, photo_200_orig, photo_200, ' \
-                           'photo_400_orig, photo_max, photo_max_orig, ' \
-                           'online, lists, domain, has_mobile, contacts, ' \
-                           'site, education, universities, schools, status, ' \
-                           'last_seen, followers_count, common_count, occupation, ' \
-                           'nickname, relatives, relation, personal, connections, ' \
-                           'exports, wall_comments, activities, interests, music, ' \
-                           'movies, tv, books, games, about, quotes, can_post, ' \
-                           'can_see_all_posts, can_see_audio, can_write_private_message, ' \
-                           'can_send_friend_request, is_favorite, is_hidden_from_feed, ' \
-                           'timezone, screen_name, maiden_name, crop_photo, is_friend, ' \
-                           'friend_status, career, military, blacklisted, blacklisted_by_me'
+        params['fields'] = 'books, about, personal, relation, status'
         resp = call_api(method, params)
         respt = json.loads(resp.text)
         users = process_response(respt)
         for u in users:
-            field = u.get('first_name')
+            field = u.get('books')
             if field:
                 info.append(field)
-                print(field)
+
+                field = u.get('about')
+            if field:
+                about.append(field)
+
+            field = u.get('personal')
+            if field:
+                p = field.get('political')
+                polit.append(p)
+            field = u.get('personal')
+            if field:
+                r = field.get('religion')
+                religion.append(r)
+            field = u.get('personal')
+            if field:
+                ins = field.get('inspired_by')
+                inspir.append(ins)
+            field = u.get('personal')
+            if field:
+                pm = field.get('people_main')
+                pmain.append(pm)
+            field = u.get('personal')
+            if field:
+                lm = field.get('life_main')
+                lmain.append(lm)
+
+            field = u.get('relation')
+            if field:
+                relat.append(field)
+            field = u.get('status')
+            if field:
+                status.append(field)
+
         print(i, " from 0 -> ", thauthends)
         time.sleep(0.01)
 
-    f = open('names.txt', 'w')
+    f = open('stats/books.txt', 'w')
+    print(len(info), "books")
     f.write(str(info))
 
+    f = open('stats/about.txt', 'w')
+    print(len(about), "about")
+    f.write(str(about))
+    f = open('stats/political.txt', 'w')
+    print(len(polit), "polit")
+    f.write(str(polit))
+    f = open('stats/religion.txt', 'w')
+    print(len(religion), "religion")
+    f.write(str(religion))
+    f = open('stats/inspired_by.txt', 'w')
+    print(len(inspir), "inpr")
+    f.write(str(inspir))
+    f = open('stats/people_main.txt', 'w')
+    print(len(pmain), "pmain")
+    f.write(str(pmain))
+    f = open('stats/life_main.txt', 'w')
+    print(len(lmain), "lmain")
+    f.write(str(lmain))
+    f = open('stats/relation.txt', 'w')
+    print(len(relat), "relat")
+    f.write(str(relat))
+    f = open('stats/status.txt', 'w')
+    print(len(status), "status")
+    f.write(str(status))
+
+    """
     set_info = set(info)
 
-    name_statistics = ''
+    statistics = ''
     for i in set_info:
         s = "%s: %d\n" % (i, info.count(i))
-        name_statistics += s
+        statistics += s
 
-    f = open("name_statistics.txt", 'w')
-    f.write(str(name_statistics))
+    f = open("books_statistics.txt", 'w')
+    f.write(str(statistics))
     """
 
     """
