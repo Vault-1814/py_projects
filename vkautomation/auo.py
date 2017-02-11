@@ -12,10 +12,21 @@ import requests
 import argparse
 import json
 import time
-
+import urllib
+import os
+import re
 
 URI_API_VK_METHOD = 'https://api.vk.com/method/'
 GETING_TOKEN = 'https://oauth.vk.com/authorize?client_id=4798804&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token'
+PATH_PHOTOS = 'fotos/'
+
+def read_token(file_name='token.secure'):
+    file = open(file_name, 'r')
+    s = file.read()
+    return s
+
+token = read_token()
+params = {'access_token': token, 'v': '5.62'}
 
 
 def get_arguments():
@@ -38,10 +49,7 @@ def call_api(method, params):
     return response
 
 
-def read_token(file_name='token.secure'):
-    file = open(file_name, 'r')
-    s = file.read()
-    return s
+
 
 
 def process_response(response):
@@ -52,12 +60,63 @@ def process_response(response):
         err = response.get('error')
         msg = err.get('error_msg')
         print(msg)
-        return
+        return 404
 
+def downloadProfileAlbums(user_ids):
+
+    """downloads profile album photos and puts for folders for each user_id"""
+    for cnt, j in enumerate(user_ids):
+        # my id. for test only
+        #j = '218406555'
+        method = 'photos.get'
+        params['owner_id'] = str(j)
+        params['album_id'] = 'profile'
+        params['rev'] = 1
+        params['extended'] = 1
+        params['count'] = 1000
+        resp = call_api(method, params)
+        respt = json.loads(resp.text)
+        photos = process_response(respt)
+        if photos != 404:
+            try:
+                os.mkdir(PATH_PHOTOS + str(j))
+            except:
+                print('user data exists!')
+                time.sleep(0.5)
+                continue
+            f = open(PATH_PHOTOS + str(j) + '/response.txt', 'w')
+            json.dump(respt, f, indent=4)
+            f.close()
+            print(j, photos['count'])
+            ps = photos['items']
+            count = 0
+            for item in ps:
+                uri = ''
+                if item.get('photo_2560'):
+                    uri = item['photo_2560']
+                elif item.get('photo_1280'):
+                    uri = item['photo_1280']
+                elif item.get('photo_807'):
+                    uri = item['photo_807']
+                elif item.get('photo_604'):                    
+                    uri = item['photo_604']
+                if uri:
+                    try:
+                        testfile = urllib.request.URLopener()
+                        # alternative method for nameing files    
+                        m = re.search(r"/[a-zA-Z0-9_-]+.jpg", uri)
+                        photo = m.group()
+                        photo_name = "%s%s%s" % (PATH_PHOTOS, j, photo)
+                        # in next methd 0.jpg is main photo
+                        #photo_name = "%s%s/%d.jpg" % (PATH_PHOTOS, j, count)
+                        testfile.retrieve(uri, photo_name) 
+                        progress = 100 * cnt / len(user_ids)
+                        print("{0:.2f}% ".format(progress), uri, photo_name)
+                    except:
+                        print('something error in urllib or regexp.')
+                    count += 1
 
 def main():
-    token = read_token()
-    params = {'access_token': token, 'v': '5.62'}
     # получаем список идентификаторов мои "друзей"
     method = 'friends.get'
     params['user_id'] = '218406555'
@@ -97,6 +156,7 @@ def main():
     thauthends = length // qty
     print(length, thauthends)
 
+    downloadProfileAlbums(s)
 
     info = []
     about = []
@@ -105,87 +165,36 @@ def main():
     inspir = []
     pmain = []
     lmain = []
-
     relat = []
-
     status = []
+
+
+ 
+
+    """
     for i in range(0, thauthends):
         ids1000 = s[i * qty:(i+1) * qty]
         # получааем кучу инфы об этих людях
         method = 'users.get'
         params['user_ids'] = str(ids1000)
-        params['fields'] = 'books, about, personal, relation, status'
+        params['fields'] = 'photo_max_orig'
         resp = call_api(method, params)
         respt = json.loads(resp.text)
         users = process_response(respt)
         for u in users:
-            field = u.get('books')
-            if field:
-                info.append(field)
-
-                field = u.get('about')
-            if field:
-                about.append(field)
-
-            field = u.get('personal')
-            if field:
-                p = field.get('political')
-                polit.append(p)
-            field = u.get('personal')
-            if field:
-                r = field.get('religion')
-                religion.append(r)
-            field = u.get('personal')
-            if field:
-                ins = field.get('inspired_by')
-                inspir.append(ins)
-            field = u.get('personal')
-            if field:
-                pm = field.get('people_main')
-                pmain.append(pm)
-            field = u.get('personal')
-            if field:
-                lm = field.get('life_main')
-                lmain.append(lm)
-
-            field = u.get('relation')
-            if field:
-                relat.append(field)
-            field = u.get('status')
-            if field:
-                status.append(field)
+            uri = u.get('photo_max_orig')
+            print(uri)
+            info.append(uri)
+            testfile = urllib.request.URLopener()
+            testfile.retrieve(uri, 'fotos/' + uri[len(uri)-14:len(uri)]) 
+            #wget.download(uri)    
 
         print(i, " from 0 -> ", thauthends)
         time.sleep(0.01)
+    
+    f = open('uri_fotos.txt')
+    """
 
-    f = open('stats/books.txt', 'w')
-    print(len(info), "books")
-    f.write(str(info))
-
-    f = open('stats/about.txt', 'w')
-    print(len(about), "about")
-    f.write(str(about))
-    f = open('stats/political.txt', 'w')
-    print(len(polit), "polit")
-    f.write(str(polit))
-    f = open('stats/religion.txt', 'w')
-    print(len(religion), "religion")
-    f.write(str(religion))
-    f = open('stats/inspired_by.txt', 'w')
-    print(len(inspir), "inpr")
-    f.write(str(inspir))
-    f = open('stats/people_main.txt', 'w')
-    print(len(pmain), "pmain")
-    f.write(str(pmain))
-    f = open('stats/life_main.txt', 'w')
-    print(len(lmain), "lmain")
-    f.write(str(lmain))
-    f = open('stats/relation.txt', 'w')
-    print(len(relat), "relat")
-    f.write(str(relat))
-    f = open('stats/status.txt', 'w')
-    print(len(status), "status")
-    f.write(str(status))
 
     """
     set_info = set(info)
